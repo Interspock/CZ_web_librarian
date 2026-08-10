@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CZ-101 Librarian</title>
+  <link rel="stylesheet" href="./src/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>CZ-101 Librarian</h1>
+      <div class="subtitle">Patch library · visual envelopes · Web MIDI SysEx</div>
+    </div>
+    <div class="midi-box">
+      <button id="connectMidi">Connect MIDI</button>
+      <select id="midiInput" aria-label="MIDI input"></select>
+      <select id="midiOutput" aria-label="MIDI output"></select>
+      <label>CH <input id="midiChannel" type="number" min="1" max="16" value="1"></label>
+      <span id="midiStatus" class="status">MIDI disconnected</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="toolbar">
+        <button id="newPatch">New</button>
+        <button id="duplicatePatch">Duplicate</button>
+        <button id="deletePatch" class="danger">Delete</button>
+      </div>
+      <input id="search" type="search" placeholder="Search patches…" />
+      <div id="patchList" class="patch-list"></div>
+      <div class="toolbar bottom">
+        <button id="importJson">Import JSON</button>
+        <button id="exportJson">Export JSON</button>
+        <input id="jsonFile" type="file" accept="application/json,.json" hidden>
+      </div>
+    </aside>
+
+    <section class="editor">
+      <div class="patch-head card">
+        <div class="field grow">
+          <label>Name</label>
+          <input id="patchName" maxlength="48" />
+        </div>
+        <div class="field">
+          <label>Line select</label>
+          <select id="lineSelect">
+            <option value="line1">Line 1</option>
+            <option value="line2">Line 2</option>
+            <option value="line1+line1">Line 1 + Line 1′</option>
+            <option value="line1+line2">Line 1 + Line 2′</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Octave</label>
+          <select id="octave"><option value="0">0</option><option value="1">+1</option><option value="-1">−1</option></select>
+        </div>
+        <div class="send-stack">
+          <button id="sendPatch" class="primary">Send to CZ current sound</button>
+          <span id="dirtyState" class="status">saved locally</span>
+        </div>
+      </div>
+
+      <section class="common-grid">
+        <div class="card compact">
+          <h2>Detune</h2>
+          <div class="row3">
+            <label>Direction<select id="detuneDirection"><option value="up">+</option><option value="down">−</option></select></label>
+            <label>Oct<input id="detuneOctave" type="number" min="0" max="3"></label>
+            <label>Note<input id="detuneNote" type="number" min="0" max="11"></label>
+            <label>Fine<input id="detuneFine" type="number" min="0" max="60"></label>
+          </div>
+        </div>
+        <div class="card compact">
+          <h2>Vibrato</h2>
+          <div class="row4">
+            <label>Wave<select id="vibWave"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></label>
+            <label>Delay<input id="vibDelay" type="number" min="0" max="99"></label>
+            <label>Rate<input id="vibRate" type="number" min="0" max="99"></label>
+            <label>Depth<input id="vibDepth" type="number" min="0" max="99"></label>
+          </div>
+        </div>
+      </section>
+
+      <div id="lines" class="lines"></div>
+
+      <section class="card log-card">
+        <div class="debug-head">
+          <div>
+            <h2>MIDI debug / protocol log</h2>
+            <div class="debug-help">1) Tocá el CZ y buscá RX NOTE. 2) Send C4 prueba Chrome → CZ. 3) SysEx smoke test manda un mensaje Casio completo y verifica que Web MIDI lo acepte. El handshake “streaming” original del CZ no se puede emitir como fragmentos desde Web MIDI.</div>
+          </div>
+          <div class="debug-actions">
+            <button id="testNote">Send C4</button>
+            <button id="testSysex">SysEx smoke test</button>
+            <button id="loadRawSyx">Load raw .syx</button>
+            <button id="sendRawSyx" disabled>Send raw → edit buffer</button>
+            <input id="rawSyxFile" type="file" accept=".syx,application/octet-stream" hidden>
+            <button id="clearMidiLog">Clear</button>
+          </div>
+        </div>
+        <div id="rawSyxInfo" class="raw-syx-info">No raw SysEx loaded.</div>
+        <pre id="log"></pre>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
