@@ -1,0 +1,149 @@
+/* CZ-101 waveform reference, redrawn as lightweight vectors from the panel legend. */
+.wave-control {
+  flex: 1 1 190px !important;
+}
+
+.wave-select-row {
+  display: grid;
+  grid-template-columns: minmax(105px, 1fr) 74px;
+  align-items: center;
+  gap: 8px;
+}
+
+.wave-preview {
+  height: 38px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #34475b;
+  border-radius: 8px;
+  background: #0a1118;
+}
+
+.wave-icon {
+  display: block;
+  width: 64px;
+  height: 38px;
+}
+
+.wave-baseline {
+  fill: none;
+  stroke: rgba(142, 161, 181, .28);
+  stroke-width: 1;
+}
+
+.wave-shape {
+  fill: none;
+  stroke: #e5b84b;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.wave-icon.off .wave-baseline {
+  stroke: rgba(142, 161, 181, .52);
+}
+
+.wave-reference {
+  margin-top: 11px;
+  padding: 10px 11px;
+  border: 1px solid rgba(51, 70, 89, .72);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(9, 16, 23, .78), rgba(12, 20, 29, .72));
+}
+
+.wave-reference-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: #dce5ee;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+}
+
+.wave-reference-head small {
+  color: #8295a8;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.wave-reference-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(62px, 1fr));
+  gap: 6px;
+}
+
+.wave-ref-item {
+  position: relative;
+  min-width: 0;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 3px 3px;
+  overflow: hidden;
+  border: 1px solid rgba(51, 70, 89, .52);
+  border-radius: 8px;
+  background: #0a1118;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.wave-ref-item .wave-icon {
+  width: 100%;
+  max-width: 72px;
+  height: 36px;
+}
+
+.wave-ref-number {
+  position: absolute;
+  top: 4px;
+  left: 7px;
+  color: #8497aa;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.wave-ref-item.selected-wave1 {
+  border-color: rgba(229, 184, 75, .88);
+  background: rgba(229, 184, 75, .065);
+  box-shadow: inset 0 0 0 1px rgba(229, 184, 75, .16);
+}
+
+.wave-ref-item.selected-wave1 .wave-ref-number {
+  color: #f1cc70;
+}
+
+.wave-ref-item.selected-wave2 {
+  box-shadow: inset 0 0 0 2px rgba(171, 197, 222, .42);
+}
+
+.wave-ref-item.selected-wave1.selected-wave2 {
+  box-shadow:
+    inset 0 0 0 1px rgba(229, 184, 75, .2),
+    inset 0 0 0 3px rgba(171, 197, 222, .28);
+}
+
+@media (max-width: 900px) {
+  .wave-reference-grid {
+    grid-template-columns: repeat(4, minmax(62px, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .wave-reference-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .wave-reference-grid {
+    grid-template-columns: repeat(2, minmax(72px, 1fr));
+  }
+}
