@@ -200,17 +200,33 @@ function renderPatch() {
     section.innerHTML = `
       <h2>${lineName === 'line1' ? 'LINE 1' : 'LINE 2'}</h2>
       <div class="line-params">
-        <label>Wave 1 <select data-p="waveform1">${waveOptions(line.waveform1, false)}</select></label>
-        <label>Wave 2 <select data-p="waveform2">${waveOptions(line.waveform2, true)}</select></label>
+        <label class="wave-control">Wave 1
+          <span class="wave-select-row">
+            <select data-p="waveform1">${waveOptions(line.waveform1, false)}</select>
+            <span class="wave-preview" data-wave-preview="waveform1">${waveformSvg(line.waveform1)}</span>
+          </span>
+        </label>
+        <label class="wave-control">Wave 2
+          <span class="wave-select-row">
+            <select data-p="waveform2">${waveOptions(line.waveform2, true)}</select>
+            <span class="wave-preview" data-wave-preview="waveform2">${waveformSvg(line.waveform2)}</span>
+          </span>
+        </label>
         ${lineName==='line1' ? `<label>Modulation <select data-p="modulation"><option value="none">None</option><option value="ring">Ring</option><option value="noise">Noise</option></select></label>` : ''}
         <label>DCA key follow <input data-p="dcaKeyFollow" type="number" min="0" max="9" value="${line.dcaKeyFollow}"></label>
         <label>DCW key follow <input data-p="dcwKeyFollow" type="number" min="0" max="9" value="${line.dcwKeyFollow}"></label>
       </div>
+      ${waveformReference(line)}
       <div class="envelopes"></div>`;
     if (lineName==='line1') section.querySelector('[data-p="modulation"]').value = line.modulation;
     section.querySelectorAll('[data-p]').forEach(el => el.addEventListener('change', () => {
       const k = el.dataset.p;
       line[k] = ['waveform1','waveform2','dcaKeyFollow','dcwKeyFollow'].includes(k) ? Number(el.value) : el.value;
+      if (k === 'waveform1' || k === 'waveform2') {
+        const preview = section.querySelector(`[data-wave-preview="${k}"]`);
+        if (preview) preview.innerHTML = waveformSvg(Number(el.value));
+        updateWaveReferenceSelection(section, line);
+      }
       changed();
     }));
     const envs = section.querySelector('.envelopes');
@@ -319,6 +335,59 @@ function waveOptions(selected, allowOff) {
   let s = allowOff ? `<option value="0">Off</option>` : '';
   for (let i=1;i<=8;i++) s += `<option value="${i}" ${i===selected?'selected':''}>Wave ${i}</option>`;
   return s;
+}
+
+
+const WAVEFORM_PATHS = {
+  1: 'M7 30 V8 L51 30',
+  2: 'M7 30 V9 H34 V30 H52',
+  3: 'M6 30 H14 C16 27 17 9 21 7 C25 13 24 27 28 30 H52',
+  4: 'M5 30 C10 30 11 8 18 8 C25 8 26 30 31 30 C36 30 37 8 44 8 C51 8 52 30 56 30',
+  5: 'M6 30 C13 30 14 10 23 9 H38 V30 H53',
+  6: 'M5 30 L8 8 L12 30 L15 11 L19 30 L22 14 L26 30 L29 17 L33 30 L36 20 L40 30 L43 23 L47 30 L50 26 L54 30',
+  7: 'M4 30 L8 27 L11 30 L14 22 L17 30 L20 16 L23 30 L26 9 L29 30 L32 16 L35 30 L38 22 L41 30 L44 27 L48 30',
+  8: 'M4 30 L7 8 L10 30 L13 8 L16 30 L19 8 L22 30 L25 8 L28 30 L31 8 L34 30 L37 8 L40 30 L43 8 L46 30 L49 8 L52 30'
+};
+
+function waveformSvg(wave) {
+  const n = Number(wave);
+  if (!WAVEFORM_PATHS[n]) {
+    return `<svg class="wave-icon off" viewBox="0 0 60 38" aria-label="Off"><path class="wave-baseline" d="M5 30 H55"/></svg>`;
+  }
+  return `<svg class="wave-icon" viewBox="0 0 60 38" role="img" aria-label="CZ waveform ${n}">
+    <path class="wave-baseline" d="M4 30 H56"/>
+    <path class="wave-shape" d="${WAVEFORM_PATHS[n]}"/>
+  </svg>`;
+}
+
+function waveformReference(line) {
+  const items = Array.from({length: 8}, (_, i) => {
+    const n = i + 1;
+    const classes = [
+      'wave-ref-item',
+      Number(line.waveform1) === n ? 'selected-wave1' : '',
+      Number(line.waveform2) === n ? 'selected-wave2' : ''
+    ].filter(Boolean).join(' ');
+    return `<div class="${classes}" data-wave-ref="${n}">
+      <span class="wave-ref-number">${n}</span>
+      ${waveformSvg(n)}
+    </div>`;
+  }).join('');
+  return `<div class="wave-reference">
+    <div class="wave-reference-head">
+      <span>CZ-101 wave form reference</span>
+      <small>panel shapes · gold = Wave 1 · outline = Wave 2</small>
+    </div>
+    <div class="wave-reference-grid">${items}</div>
+  </div>`;
+}
+
+function updateWaveReferenceSelection(section, line) {
+  section.querySelectorAll('[data-wave-ref]').forEach(item => {
+    const n = Number(item.dataset.waveRef);
+    item.classList.toggle('selected-wave1', Number(line.waveform1) === n);
+    item.classList.toggle('selected-wave2', Number(line.waveform2) === n);
+  });
 }
 
 function log(msg) {
