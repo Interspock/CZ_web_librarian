@@ -212,9 +212,9 @@ function renderPatch() {
             <span class="wave-preview" data-wave-preview="waveform2">${waveformSvg(line.waveform2)}</span>
           </span>
         </label>
-        ${lineName==='line1' ? `<label>Modulation <select data-p="modulation"><option value="none">None</option><option value="ring">Ring</option><option value="noise">Noise</option></select></label>` : ''}
-        <label>DCA key follow <input data-p="dcaKeyFollow" type="number" min="0" max="9" value="${line.dcaKeyFollow}"></label>
         <label>DCW key follow <input data-p="dcwKeyFollow" type="number" min="0" max="9" value="${line.dcwKeyFollow}"></label>
+        <label>DCA key follow <input data-p="dcaKeyFollow" type="number" min="0" max="9" value="${line.dcaKeyFollow}"></label>
+        ${lineName==='line1' ? `<label>Modulation <select data-p="modulation"><option value="none">None</option><option value="ring">Ring</option><option value="noise">Noise</option></select></label>` : ''}
       </div>
       ${waveformReference(line)}
       <div class="envelopes"></div>`;
@@ -341,12 +341,12 @@ function waveOptions(selected, allowOff) {
 const WAVEFORM_PATHS = {
   1: 'M7 30 V8 L51 30',
   2: 'M7 30 V9 H34 V30 H52',
-  3: 'M6 30 H14 C16 27 17 9 21 7 C25 13 24 27 28 30 H52',
-  4: 'M5 30 C10 30 11 8 18 8 C25 8 26 30 31 30 C36 30 37 8 44 8 C51 8 52 30 56 30',
-  5: 'M6 30 C13 30 14 10 23 9 H38 V30 H53',
+  3: 'M5 30 H13 L19 8 L25 30 H55',
+  4: 'M4 30 L10 8 L16 30 C21 30 22 8 34 8 C46 8 47 30 56 30',
+  5: 'M5 30 C10 30 12 8 25 8 H29 V30 H55',
   6: 'M5 30 L8 8 L12 30 L15 11 L19 30 L22 14 L26 30 L29 17 L33 30 L36 20 L40 30 L43 23 L47 30 L50 26 L54 30',
   7: 'M4 30 L8 27 L11 30 L14 22 L17 30 L20 16 L23 30 L26 9 L29 30 L32 16 L35 30 L38 22 L41 30 L44 27 L48 30',
-  8: 'M4 30 L7 8 L10 30 L13 8 L16 30 L19 8 L22 30 L25 8 L28 30 L31 8 L34 30 L37 8 L40 30 L43 8 L46 30 L49 8 L52 30'
+  8: 'M4 30 V8 H8 V30 H11 V11 H15 V30 H18 V14 H22 V30 H25 V17 H29 V30 H32 V20 H36 V30 H39 V23 H43 V30 H46 V26 H50 V30 H55'
 };
 
 function waveformSvg(wave) {

@@ -81,6 +81,7 @@ export class EnvelopeEditor {
   table() {
     const div = document.createElement('div');
     div.className = 'env-table';
+    this.uid ||= crypto.randomUUID();
     for (let i = 0; i < MAX_STEPS; i++) {
       const s = this.envelope.steps[i];
       const row = document.createElement('div');
@@ -89,14 +90,20 @@ export class EnvelopeEditor {
         <strong>${i + 1}</strong>
         <label>R <input data-k="rate" type="number" min="0" max="99" value="${s.rate}"></label>
         <label>L <input data-k="level" type="number" min="0" max="99" value="${s.level}"></label>
-        <label class="check"><input data-k="sustain" type="checkbox" ${s.sustain ? 'checked' : ''}> S</label>
-        <label class="check"><input data-k="end" type="radio" name="end-${this.envelope.kind}-${this.uid ||= crypto.randomUUID()}" ${i + 1 === this.envelope.endStep ? 'checked' : ''}> E</label>`;
+        <label class="check"><input data-k="sustain" type="radio" name="sustain-${this.envelope.kind}-${this.uid}" ${s.sustain ? 'checked' : ''} ${i >= this.envelope.endStep ? 'disabled' : ''}> S</label>
+        <label class="check"><input data-k="end" type="radio" name="end-${this.envelope.kind}-${this.uid}" ${i + 1 === this.envelope.endStep ? 'checked' : ''}> E</label>`;
       row.querySelectorAll('input').forEach(input => input.addEventListener('change', () => {
         const key = input.dataset.k;
-        if (key === 'rate' || key === 'level') s[key] = clamp(input.value, 0, 99);
+        if (key === 'rate' || key === 'level') {
+          s[key] = clamp(input.value, 0, 99);
+          input.value = s[key];
+          this.onChange?.(this.envelope);
+          this.refreshGraph();
+          return;
+        }
         if (key === 'sustain') {
           this.envelope.steps.forEach(x => x.sustain = false);
-          if (i < this.envelope.endStep) s.sustain = input.checked;
+          if (i < this.envelope.endStep) s.sustain = true;
         }
         if (key === 'end') {
           this.envelope.endStep = i + 1;
@@ -107,6 +114,28 @@ export class EnvelopeEditor {
       div.append(row);
     }
     return div;
+  }
+
+  refreshGraph() {
+    if (!this.svg?.isConnected) return;
+    const active = this.envelope.steps.slice(0, this.envelope.endStep);
+    const points = active.map((s, i) => this.xy(i, s));
+    this.svg.querySelector('.env-line')?.setAttribute(
+      'points',
+      `${this.pad.l},${this.height - this.pad.b} ` + points.map(p => `${p.x},${p.y}`).join(' ')
+    );
+    active.forEach((step, i) => {
+      const group = this.svg.querySelector(`.env-node[data-index="${i}"]`);
+      if (!group) return;
+      const point = points[i];
+      const circle = group.querySelector('circle');
+      const label = group.querySelector('text');
+      circle?.setAttribute('cx', point.x);
+      circle?.setAttribute('cy', point.y);
+      label?.setAttribute('x', point.x + 10);
+      label?.setAttribute('y', point.y - 9);
+      if (label) label.textContent = `${i + 1}${step.sustain ? ' S' : ''}${i + 1 === this.envelope.endStep ? ' E' : ''}`;
+    });
   }
 
   xy(i, step) {
@@ -141,7 +170,7 @@ export class EnvelopeEditor {
     const step = this.envelope.steps[this.drag.i];
     step.level = clamp(level, 0, 99);
     step.rate = clamp(rate, 0, 99);
-    this.render();
+    this.refreshGraph();
   }
 
   pointerUp(e) {

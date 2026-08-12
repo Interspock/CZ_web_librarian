@@ -27,7 +27,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -102,14 +102,15 @@ button:disabled {
 
 h1 {
   margin: 0;
-  font-size: clamp(19px, 1.8vw, 24px);
+  font-size: clamp(18px, 1.6vw, 21px);
+  font-weight: 650;
   letter-spacing: -.025em;
 }
 
 .subtitle {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: .01em;
 }
 
@@ -121,17 +122,45 @@ h1 {
   flex-wrap: wrap;
 }
 
+.topbar button:not(.header-send),
+.topbar input,
+.topbar select {
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .midi-box > label {
   display: flex;
   align-items: center;
   gap: 6px;
   color: var(--muted-strong);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .midi-box select {
   width: clamp(150px, 13vw, 190px);
+  min-width: 130px;
+}
+
+.header-send {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#connectMidi,
+.header-send,
+.midi-box > label,
+#midiStatus {
+  flex-shrink: 0;
+}
+
+#midiStatus {
+  white-space: nowrap;
+  font-size: 11px;
 }
 
 #midiChannel {
@@ -146,7 +175,7 @@ h1 {
 
 .layout {
   display: grid;
-  grid-template-columns: 252px minmax(0, 1fr);
+  grid-template-columns: 228px minmax(0, 1fr);
   min-height: calc(100vh - 70px);
 }
 
@@ -181,6 +210,14 @@ h1 {
   flex: 1 1 auto;
 }
 
+.sidebar button,
+.sidebar input {
+  min-height: 34px;
+  padding: 7px 9px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .toolbar.bottom {
   margin-top: auto;
 }
@@ -213,6 +250,8 @@ h1 {
 
 .patch-item strong {
   overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -240,9 +279,9 @@ h1 {
 
 .patch-head {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(150px, auto) minmax(90px, auto) auto;
+  grid-template-columns: minmax(140px, 1fr) minmax(110px, 140px) 64px;
   align-items: end;
-  gap: 12px;
+  gap: 8px;
 }
 
 .field {
@@ -286,11 +325,27 @@ h1 {
   color: var(--danger);
 }
 
-.common-grid {
+.parameter-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin: 12px 0;
+  grid-template-columns: minmax(300px, 1.15fr) repeat(2, minmax(280px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.parameter-row > .card {
+  height: 100%;
+  padding: 13px;
+}
+
+.parameter-row input,
+.parameter-row select {
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+#patchName {
+  width: 100%;
 }
 
 .compact h2,
@@ -325,6 +380,20 @@ h1 {
 .line-params input {
   width: 100%;
   min-width: 64px;
+}
+
+.parameter-row .row3,
+.parameter-row .row4 {
+  display: grid;
+  gap: 7px;
+}
+
+.parameter-row .row3 {
+  grid-template-columns: 76px repeat(3, minmax(46px, 1fr));
+}
+
+.parameter-row .row4 {
+  grid-template-columns: 68px repeat(3, minmax(46px, 1fr));
 }
 
 .lines {
@@ -460,6 +529,8 @@ h1 {
   align-items: center;
   gap: 2px;
   white-space: nowrap;
+  font-size: 10px;
+  font-weight: 400;
 }
 
 .env-row .check input {
@@ -474,6 +545,40 @@ h1 {
   margin-top: 12px;
 }
 
+.log-card > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  list-style: none;
+  cursor: pointer;
+  color: #dfe7ef;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.log-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.log-card > summary::after {
+  content: '›';
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  transition: transform .16s ease;
+}
+
+.log-card[open] > summary::after {
+  transform: rotate(90deg);
+}
+
+.debug-body {
+  padding-top: 12px;
+}
+
 .debug-head {
   display: flex;
   align-items: flex-start;
@@ -482,14 +587,10 @@ h1 {
   flex-wrap: wrap;
 }
 
-.debug-head h2 {
-  margin-bottom: 4px;
-}
-
 .debug-help {
   max-width: 760px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1.45;
 }
 
@@ -499,6 +600,14 @@ h1 {
   flex-wrap: wrap;
 }
 
+.log-card button,
+.log-card input {
+  min-height: 31px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .raw-syx-info {
   margin: 10px 0;
   padding: 9px 10px;
@@ -506,7 +615,7 @@ h1 {
   border-radius: 8px;
   color: var(--muted);
   background: #0b131b;
-  font-size: 11px;
+  font-size: 10px;
   overflow-wrap: anywhere;
 }
 
@@ -531,7 +640,7 @@ h1 {
   border-radius: 8px;
   color: #b8c6d3;
   background: #070c11;
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -560,8 +669,13 @@ h1 {
     height: calc(100vh - 112px);
   }
 
+  .parameter-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .patch-head {
-    grid-template-columns: minmax(220px, 1fr) repeat(2, auto);
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(180px, 1fr) minmax(120px, 160px) 70px;
   }
 
   .send-stack {
@@ -588,10 +702,6 @@ h1 {
     max-height: 190px;
   }
 
-  .common-grid {
-    grid-template-columns: 1fr;
-  }
-
   .editor {
     padding: 14px;
   }
@@ -599,7 +709,6 @@ h1 {
 
 @media (max-width: 760px) {
   .topbar {
-    position: static;
     padding: 13px 14px;
   }
 
@@ -620,12 +729,15 @@ h1 {
   }
 
   .patch-head {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(140px, 1fr) minmax(110px, 140px) 64px;
   }
 
-  .patch-head .grow,
-  .send-stack {
-    grid-column: 1 / -1;
+  .parameter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .patch-head {
+    grid-column: auto;
   }
 
   .env-wrap {
@@ -647,6 +759,7 @@ h1 {
 
 @media (max-width: 520px) {
   .midi-box,
+  .parameter-row,
   .patch-head {
     grid-template-columns: 1fr;
   }
