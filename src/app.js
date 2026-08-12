@@ -31,6 +31,7 @@ bindings.forEach(([sel, , set]) => {
     set(store.selected(), e.target.value);
     changed();
     if (sel === '#patchName') renderPatchList();
+    if (sel === '#lineSelect') renderPatch();
   });
 });
 
@@ -193,7 +194,7 @@ function renderPatch() {
   const lines = $('#lines');
   lines.innerHTML = '';
   envEditors = [];
-  for (const lineName of ['line1','line2']) {
+  for (const lineName of visibleLines(p.common.lineSelect)) {
     const line = p[lineName];
     const section = document.createElement('section');
     section.className = 'line-card card';
@@ -240,6 +241,12 @@ function renderPatch() {
     lines.append(section);
   }
   $('#dirtyState').textContent = 'saved locally';
+}
+
+function visibleLines(lineSelect) {
+  if (lineSelect === 'line2') return ['line2'];
+  if (lineSelect === 'line1+line2') return ['line1', 'line2'];
+  return ['line1'];
 }
 
 function changed() {
