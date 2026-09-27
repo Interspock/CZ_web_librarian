@@ -50,6 +50,7 @@ export function normalizePatch(raw) {
   p.schemaVersion = 1;
   p.meta ||= {};
   p.meta.updatedAt ||= new Date().toISOString();
+  if (internalDestination(p) === null) delete p.meta.internalDestination;
   for (const ln of ['line1', 'line2']) {
     for (const kind of ['dco', 'dcw', 'dca']) {
       const e = p[ln].envelopes[kind];
@@ -69,6 +70,11 @@ export function normalizePatch(raw) {
     }
   }
   return p;
+}
+
+export function internalDestination(patch) {
+  const n = patch.meta?.internalDestination;
+  return Number.isInteger(n) && n >= 1 && n <= 16 ? n : null;
 }
 
 function deepAssign(target, source) {

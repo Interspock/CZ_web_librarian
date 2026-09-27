@@ -1,5 +1,5 @@
 import { PatchStore } from './store.js';
-import { createPatch, clamp } from './patch-model.js';
+import { createPatch, clamp, internalDestination } from './patch-model.js';
 import { EnvelopeEditor } from './envelope-editor.js';
 import { MidiManager } from './midi.js';
 import { sendPatchToCZ, testCZSysex, encodeTone, nibblize } from './cz101-sysex.js';
@@ -14,6 +14,11 @@ let rawSyx = null;
 
 const bindings = [
   ['#patchName', p=>p.name, (p,v)=>p.name=v],
+  ['#destination', p=>internalDestination(p) ?? '', (p,v)=>{
+    const n = Number(v);
+    if (v !== '' && Number.isInteger(n) && n >= 1 && n <= 16) p.meta.internalDestination = n;
+    else delete p.meta.internalDestination;
+  }],
   ['#lineSelect', p=>p.common.lineSelect, (p,v)=>p.common.lineSelect=v],
   ['#octave', p=>p.common.octave, (p,v)=>p.common.octave=Number(v)],
   ['#detuneDirection', p=>p.common.detune.direction, (p,v)=>p.common.detune.direction=v],
@@ -148,13 +153,18 @@ $('#clearMidiLog').onclick = () => { $('#log').textContent = ''; };
 $('#sendPatch').onclick = async () => {
   try {
     const p = store.selected();
+    const destination = internalDestination(p);
+    const program = destination === null ? 0x60 : 0x20 + destination - 1;
+    const output = selectedOutput();
+    if (destination !== null && !confirm(`Write this patch to INTERNAL ${destination}? This will overwrite the patch currently stored in that slot. MEMORY PROTECT must be OFF.`)) return;
     const logical = encodeTone(p);
     log(`Encoded ${logical.length} logical bytes / ${nibblize(logical).length} nibbles`);
+    log(`TX destination: ${destination === null ? 'edit buffer' : `INTERNAL ${destination}`} (0x${program.toString(16).toUpperCase()})`);
     await sendPatchToCZ({
-      midiOutput: selectedOutput(),
+      midiOutput: output,
       channel: Number($('#midiChannel').value),
       patch: p,
-      program: 0x60,
+      program,
       log
     });
     $('#midiStatus').textContent = 'Patch sent';

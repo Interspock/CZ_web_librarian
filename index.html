@@ -19,7 +19,7 @@
       <select id="midiInput" aria-label="MIDI input"></select>
       <select id="midiOutput" aria-label="MIDI output"></select>
       <label>CH <input id="midiChannel" type="number" min="1" max="16" value="1"></label>
-      <button id="sendPatch" class="primary header-send" title="Send to CZ current sound" aria-label="Send to CZ current sound">Send to CZ</button>
+      <button id="sendPatch" class="primary header-send" title="Send patch to selected destination" aria-label="Send patch to selected destination">Send to CZ</button>
       <span id="dirtyState" class="status" hidden>saved locally</span>
       <span id="midiStatus" class="status">MIDI disconnected</span>
     </div>
@@ -47,6 +47,28 @@
         <div class="field grow">
           <label>Name</label>
           <input id="patchName" maxlength="48" />
+        </div>
+        <div class="field">
+          <label>Destination</label>
+          <select id="destination">
+            <option value="">Edit buffer</option>
+            <option value="1">Internal 1</option>
+            <option value="2">Internal 2</option>
+            <option value="3">Internal 3</option>
+            <option value="4">Internal 4</option>
+            <option value="5">Internal 5</option>
+            <option value="6">Internal 6</option>
+            <option value="7">Internal 7</option>
+            <option value="8">Internal 8</option>
+            <option value="9">Internal 9</option>
+            <option value="10">Internal 10</option>
+            <option value="11">Internal 11</option>
+            <option value="12">Internal 12</option>
+            <option value="13">Internal 13</option>
+            <option value="14">Internal 14</option>
+            <option value="15">Internal 15</option>
+            <option value="16">Internal 16</option>
+          </select>
         </div>
         <div class="field">
           <label>Line select</label>

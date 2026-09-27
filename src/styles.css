@@ -279,7 +279,7 @@ h1 {
 
 .patch-head {
   display: grid;
-  grid-template-columns: minmax(140px, 1fr) minmax(110px, 140px) 64px;
+  grid-template-columns: minmax(100px, 1fr) minmax(105px, 115px) minmax(105px, 125px) 64px;
   align-items: end;
   gap: 8px;
 }
@@ -327,7 +327,7 @@ h1 {
 
 .parameter-row {
   display: grid;
-  grid-template-columns: minmax(300px, 1.15fr) repeat(2, minmax(280px, 1fr));
+  grid-template-columns: minmax(470px, 1.5fr) repeat(2, minmax(280px, .8fr));
   gap: 10px;
   margin-bottom: 12px;
 }
@@ -654,6 +654,17 @@ h1 {
   }
 }
 
+@media (max-width: 1320px) {
+  .parameter-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .patch-head {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(180px, 1fr) 120px minmax(120px, 160px) 70px;
+  }
+}
+
 @media (max-width: 1160px) {
   .topbar {
     grid-template-columns: 1fr;
@@ -667,15 +678,6 @@ h1 {
   .sidebar {
     top: 112px;
     height: calc(100vh - 112px);
-  }
-
-  .parameter-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .patch-head {
-    grid-column: 1 / -1;
-    grid-template-columns: minmax(180px, 1fr) minmax(120px, 160px) 70px;
   }
 
   .send-stack {
@@ -729,7 +731,7 @@ h1 {
   }
 
   .patch-head {
-    grid-template-columns: minmax(140px, 1fr) minmax(110px, 140px) 64px;
+    grid-template-columns: minmax(100px, 1fr) minmax(105px, 115px) minmax(105px, 125px) 64px;
   }
 
   .parameter-row {
