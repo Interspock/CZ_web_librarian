@@ -67,6 +67,18 @@ $('#testNote').onclick = () => {
   }
 };
 
+$('#setA440').onclick = () => {
+  try {
+    const out = selectedOutput();
+    const ch = selectedChannel0();
+    const message = [0xB0 | ch, 0x06, 0x40];
+    out.send(message);
+    log(`TX MASTER TUNE A440: ${hex(message)}  (CC 6 = 64, CH ${ch + 1})`);
+  } catch (e) {
+    log(`MASTER TUNE ERROR: ${e.message}`);
+  }
+};
+
 $('#testSysex').onclick = async () => {
   try {
     $('#midiStatus').textContent = 'Testing SysEx…';
