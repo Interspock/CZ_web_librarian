@@ -9,8 +9,10 @@ Vanilla HTML/CSS/JavaScript librarian/editor for the Casio CZ-101.
 - Visual drag editor for the 6 CZ envelopes (DCO/DCW/DCA × Line 1/2)
 - Sustain / End step markers
 - Basic CZ parameters (line select, octave, detune, vibrato, waves, key follow)
+- Only the line editor(s) selected by Line select are shown; Line 1 + Line 1′ uses the Line 1 editor
+- CZ waveform reference and responsive editor layout
 - Web MIDI connection with SysEx permission
-- Send current patch to a CZ-101 through the temporary sound area (`0x60`)
+- Send a patch to the temporary/edit buffer (`0x60`) by default, or optionally to an assigned INTERNAL 1–16 slot
 - SysEx codec isolated in `src/cz101-sysex.js`
 
 No framework and no backend.
@@ -34,10 +36,16 @@ Use Chrome/Chromium and grant MIDI/SysEx permission.
 ## Important CZ-101 setup
 
 - MIDI IN from the computer/interface must be connected.
-- For the handshake used by the CZ protocol, MIDI OUT from the CZ should also return to the computer/interface.
+- MIDI OUT from the CZ is optional for sending patches; connect it to a computer MIDI input to use the incoming MIDI monitor.
 - MIDI channel in the app must match the CZ receive channel.
 - Enable the CZ MIDI/SysEx programming mode as required by the instrument.
-- The MVP sends to **CURRENT SOUND / temporary area (`0x60`)**, so experimenting does not intentionally overwrite an internal memory slot.
+- **Destination defaults to Edit buffer (`0x60`)**, which does not intentionally overwrite an internal memory slot. Selecting INTERNAL 1–16 writes directly to that slot after an explicit confirmation. Set the CZ's MEMORY PROTECT to OFF for an INTERNAL write.
+
+## Patch destinations
+
+Each patch has an optional Destination selector next to Name. **Edit buffer** is the default for new patches and for older libraries without a destination. No destination value needs to be stored for this default. Choosing **Internal 1–16** stores the slot in `meta.internalDestination`; duplication and JSON export/import preserve it. Invalid imported slot values fall back to Edit buffer.
+
+`Send to CZ` maps Edit buffer to program byte `0x60` and Internal 1–16 to `0x20`–`0x2F`. An INTERNAL send asks for confirmation because it can overwrite the patch already in that slot. The MIDI log records the destination before transmission.
 
 ## Architecture
 
@@ -51,7 +59,7 @@ UI / envelope SVG
  cz101-sysex.js
        │
        ▼
- Web MIDI + CZ handshake
+ Web MIDI output
 ```
 
 GitHub persistence is deliberately left out of this first wave. It can be added later behind a repository adapter without changing the patch model.
@@ -70,20 +78,22 @@ Primary technical references used for this scaffold:
 1. Add receive/request and decode from CZ → JSON.
 2. Add golden-vector tests using known `.syx` patch dumps.
 3. Improve waveform/modulation UI and exact hidden-feature coverage.
-4. Add bank management and slot assignment.
+4. Add bank management and bulk operations.
 5. Add GitHub repository adapter as an optional persistence backend.
 6. Add undo/redo and A/B patch comparison.
 
 
 ## MIDI debug
 
-The UI includes a permanent raw MIDI monitor and two diagnostic actions:
+Expand **MIDI debug / protocol log** to access the incoming MIDI monitor and diagnostic actions:
 
-- **Send C4**: sends Note On/Off on the selected MIDI channel. This verifies browser → USB MIDI → CZ.
-- **Handshake test**: sends only the CZ current-sound receive request and waits up to 5 seconds for the ACK. It does **not** send tone data.
-- Incoming bytes from the selected MIDI input are logged continuously, including ordinary notes and SysEx.
+- **Send C4**: sends Note On/Off on the selected MIDI channel to test browser → MIDI interface → CZ.
+- **Set A440**: sends CC 6 = 64 on the selected MIDI channel to center the CZ-101 Master Tune.
+- **SysEx smoke test**: sends a complete Casio SysEx frame to check that Web MIDI accepts the transmission. It does not wait for an ACK.
+- **Load raw .syx / Send raw → edit buffer**: validates and sends a raw tone frame as described below.
+- **Clear**: clears the MIDI log. Incoming bytes from the selected MIDI input, including notes and SysEx, are logged continuously while connected.
 
-Recommended diagnostic order: CZ → browser Note On, browser → CZ C4, then SysEx handshake.
+`Send to CZ` also uses a complete SysEx frame. A successful send means Web MIDI accepted the message; the app does not verify that the CZ received or applied it. Unlike the documented interactive CZ handshake, this browser implementation does not wait for a reply from the keyboard.
 
 
 ## Raw `.syx` validation / safe test path
