@@ -171,7 +171,7 @@ export function initHelp() {
   panel.hidden = true;
   panel.setAttribute('role', 'region');
   panel.setAttribute('aria-labelledby', 'sound-help-title');
-  panel.innerHTML = '<div class="sound-help-head"><h4 id="sound-help-title"></h4><button type="button" class="help-close" aria-label="Cerrar ayuda">×</button></div><div class="sound-help-body" tabindex="0" aria-label="Contenido de la ayuda"></div><footer>Hover para explorar · clic en ? para fijar · Esc para cerrar</footer>';
+  panel.innerHTML = '<div class="sound-help-head"><h4 id="sound-help-title"></h4><button type="button" class="help-close" aria-label="Cerrar ayuda">×</button></div><div class="sound-help-body" tabindex="0" aria-label="Contenido de la ayuda"></div><footer>Hover sobre ? para explorar · clic para fijar · Esc para cerrar</footer>';
   document.body.append(panel);
   let anchor = null;
   let pinned = false;
@@ -260,14 +260,14 @@ export function initHelp() {
   document.addEventListener('pointerover', event => {
     if (event.pointerType === 'touch') return;
     if (panel.contains(event.target)) return clearTimeout(timer);
-    const target = event.target.closest('[data-help]');
-    if (!target || target.contains(event.relatedTarget) || pinned) return;
+    const trigger = event.target.closest('.help-trigger');
+    if (!trigger || trigger.contains(event.relatedTarget) || pinned) return;
     clearTimeout(timer);
-    timer = setTimeout(() => show(target), 300);
+    timer = setTimeout(() => show(trigger.closest('[data-help]')), 300);
   });
   document.addEventListener('pointerout', event => {
-    const target = event.target.closest('[data-help]');
-    if (target && !target.contains(event.relatedTarget)) scheduleHide();
+    const trigger = event.target.closest('.help-trigger');
+    if (trigger && !trigger.contains(event.relatedTarget)) scheduleHide();
   });
   panel.addEventListener('pointerleave', scheduleHide);
   document.addEventListener('focusin', event => {
@@ -275,7 +275,7 @@ export function initHelp() {
   });
   document.addEventListener('focusout', event => {
     if ((event.target.matches('.help-trigger') || panel.contains(event.target)) &&
-        !panel.contains(event.relatedTarget) && !anchor?.contains(event.relatedTarget)) scheduleHide();
+        !panel.contains(event.relatedTarget) && !anchor?.querySelector('.help-trigger')?.contains(event.relatedTarget)) scheduleHide();
   });
   document.addEventListener('click', event => {
     const trigger = event.target.closest('.help-trigger');

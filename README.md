@@ -22,7 +22,7 @@ No framework and no backend.
 
 ## Sound-design help
 
-Hover over section headings or parameter labels to read detailed explanations and sound-design suggestions. Click or tap **?** to keep the bubble open; use its scroll area for longer guides and close it with **×**, Escape, or a click outside. Keyboard users can focus **?** and press Enter or Space, then Tab into the scrollable content. Envelope guides include Rate, Level, Sustain and End; individual R/L/S/E labels also provide hover help without adding stops between the numerical inputs. The help links to the original CZ-101 operation manual and distinguishes the editor's relative timing diagram from hardware envelope timing.
+Hover over a **?** icon to read detailed explanations and sound-design suggestions. Hovering over labels or input controls does not open help. Click or tap **?** to keep the bubble open; use its scroll area for longer guides and close it with **×**, Escape, or a click outside. Keyboard users can focus **?** and press Enter or Space, then Tab into the scrollable content. Envelope guides include Rate, Level, Sustain and End without adding stops between the numerical inputs. The help links to the original CZ-101 operation manual and distinguishes the editor's relative timing diagram from hardware envelope timing.
 
 ## Run
 
