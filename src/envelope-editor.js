@@ -88,10 +88,10 @@ export class EnvelopeEditor {
       row.className = `env-row ${i >= this.envelope.endStep ? 'inactive' : ''}`;
       row.innerHTML = `
         <strong>${i + 1}</strong>
-        <label>R <input data-k="rate" type="number" min="0" max="99" value="${s.rate}"></label>
-        <label>L <input data-k="level" type="number" min="0" max="99" value="${s.level}"></label>
-        <label class="check"><input data-k="sustain" type="radio" name="sustain-${this.envelope.kind}-${this.uid}" ${s.sustain ? 'checked' : ''} ${i >= this.envelope.endStep ? 'disabled' : ''}> S</label>
-        <label class="check"><input data-k="end" type="radio" name="end-${this.envelope.kind}-${this.uid}" ${i + 1 === this.envelope.endStep ? 'checked' : ''}> E</label>`;
+        <label data-help="rate" data-help-hover-only>R <input aria-label="Rate, etapa ${i + 1}" data-k="rate" type="number" min="0" max="99" value="${s.rate}"></label>
+        <label data-help="level" data-help-hover-only>L <input aria-label="Level, etapa ${i + 1}" data-k="level" type="number" min="0" max="99" value="${s.level}"></label>
+        <label class="check" data-help="sustain" data-help-hover-only><input aria-label="Sustain, etapa ${i + 1}" data-k="sustain" type="radio" name="sustain-${this.envelope.kind}-${this.uid}" ${s.sustain ? 'checked' : ''} ${i >= this.envelope.endStep ? 'disabled' : ''}> S</label>
+        <label class="check" data-help="end" data-help-hover-only><input aria-label="End, etapa ${i + 1}" data-k="end" type="radio" name="end-${this.envelope.kind}-${this.uid}" ${i + 1 === this.envelope.endStep ? 'checked' : ''}> E</label>`;
       row.querySelector('[data-k="sustain"]').addEventListener('click', event => {
         const removeSustain = s.sustain;
         event.preventDefault();

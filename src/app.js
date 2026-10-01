@@ -3,6 +3,7 @@ import { createPatch, clamp, internalDestination } from './patch-model.js';
 import { EnvelopeEditor } from './envelope-editor.js';
 import { MidiManager } from './midi.js';
 import { sendPatchToCZ, testCZSysex, encodeTone, nibblize } from './cz101-sysex.js';
+import { initHelp, enhanceHelp } from './help.js';
 
 const $ = s => document.querySelector(s);
 const store = new PatchStore();
@@ -303,23 +304,23 @@ function renderPatch() {
     const section = document.createElement('section');
     section.className = 'line-card card';
     section.innerHTML = `
-      <h2>${lineName === 'line1' ? 'LINE 1' : 'LINE 2'}</h2>
+      <h2 data-help="line">${lineName === 'line1' ? 'LINE 1' : 'LINE 2'}</h2>
       <div class="line-params">
-        <label class="wave-control">Wave 1
+        <label class="wave-control" data-help="waves">Wave 1
           <span class="wave-select-row">
             <select data-p="waveform1">${waveOptions(line.waveform1, false)}</select>
             <span class="wave-preview" data-wave-preview="waveform1">${waveformSvg(line.waveform1)}</span>
           </span>
         </label>
-        <label class="wave-control">Wave 2
+        <label class="wave-control" data-help="waves">Wave 2
           <span class="wave-select-row">
             <select data-p="waveform2">${waveOptions(line.waveform2, true)}</select>
             <span class="wave-preview" data-wave-preview="waveform2">${waveformSvg(line.waveform2)}</span>
           </span>
         </label>
-        <label>DCW key follow <input data-p="dcwKeyFollow" type="number" min="0" max="9" value="${line.dcwKeyFollow}"></label>
-        <label>DCA key follow <input data-p="dcaKeyFollow" type="number" min="0" max="9" value="${line.dcaKeyFollow}"></label>
-        ${lineName==='line1' ? `<label>Modulation <select data-p="modulation"><option value="none">None</option><option value="ring">Ring</option><option value="noise">Noise</option></select></label>` : ''}
+        <label data-help="dcwFollow">DCW key follow <input data-p="dcwKeyFollow" type="number" min="0" max="9" value="${line.dcwKeyFollow}"></label>
+        <label data-help="dcaFollow">DCA key follow <input data-p="dcaKeyFollow" type="number" min="0" max="9" value="${line.dcaKeyFollow}"></label>
+        ${lineName==='line1' ? `<label data-help="modulation">Modulation <select data-p="modulation"><option value="none">None</option><option value="ring">Ring</option><option value="noise">Noise</option></select></label>` : ''}
       </div>
       ${waveformReference(line)}
       <div class="envelopes"></div>`;
@@ -338,12 +339,13 @@ function renderPatch() {
     for (const kind of ['dco','dcw','dca']) {
       const box = document.createElement('div');
       box.className = 'env-card';
-      box.innerHTML = `<h3>${kind.toUpperCase()} envelope <small>drag node: vertical = level · horizontal = rate</small></h3><div class="env-host"></div>`;
+      box.innerHTML = `<h3 data-help="${kind}">${kind.toUpperCase()} envelope <small>drag node: vertical = level · horizontal = rate</small></h3><div class="env-host"></div>`;
       envs.append(box);
       envEditors.push(new EnvelopeEditor(box.querySelector('.env-host'), line.envelopes[kind], changed));
     }
     lines.append(section);
   }
+  enhanceHelp(lines);
   $('#dirtyState').textContent = 'saved locally';
 }
 
@@ -486,7 +488,7 @@ function waveformReference(line) {
   }).join('');
   return `<div class="wave-reference">
     <div class="wave-reference-head">
-      <span>CZ-101 wave form reference</span>
+      <span data-help="reference">CZ-101 wave form reference</span>
       <small>panel shapes · gold = Wave 1 · outline = Wave 2</small>
     </div>
     <div class="wave-reference-grid">${items}</div>
@@ -509,3 +511,4 @@ function log(msg) {
 function escapeHtml(v){ return String(v).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 renderAll();
+initHelp();

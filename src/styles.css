@@ -80,6 +80,116 @@ button:active:not(:disabled) {
   transform: translateY(1px);
 }
 
+.help-caption {
+  display: inline-flex;
+  align-items: center;
+}
+
+.help-trigger {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin-inline: 5px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: help;
+}
+
+.help-trigger:hover,
+.help-trigger:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+  outline: 2px solid rgba(229, 184, 75, .25);
+  outline-offset: 2px;
+}
+
+.sound-help {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, calc(100vw - 24px));
+  max-height: min(650px, calc(100dvh - 24px));
+  border: 1px solid #526375;
+  border-radius: var(--radius-md);
+  color: var(--text);
+  background: #121e2b;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, .55);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.65;
+}
+
+.sound-help[hidden] {
+  display: none;
+}
+
+.sound-help-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 10px;
+}
+
+.sound-help h4 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.sound-help .help-close {
+  flex: 0 0 auto;
+  min-height: 26px;
+  width: 26px;
+  padding: 0;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.sound-help-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 18px 16px;
+}
+
+.sound-help-body p {
+  margin: 0 0 12px;
+}
+
+.sound-help-body h5 {
+  margin: 18px 0 8px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sound-help-body a {
+  color: var(--accent);
+  text-underline-offset: 3px;
+}
+
+.sound-help footer {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--line);
+  padding: 9px 18px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 button:disabled {
   opacity: .45;
   cursor: not-allowed;

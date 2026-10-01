@@ -11,11 +11,16 @@ Vanilla HTML/CSS/JavaScript librarian/editor for the Casio CZ-101.
 - Basic CZ parameters (line select, octave, detune, vibrato, waves, key follow)
 - Only the line editor(s) selected by Line select are shown; Line 1 + Line 1′ uses the Line 1 editor
 - CZ waveform reference and responsive editor layout
+- Extensive Spanish sound-design help for waves/PD, envelopes, key follow, modulation, detune and vibrato
 - Web MIDI connection with SysEx permission
 - Send a patch to the temporary/edit buffer (`0x60`) by default, or optionally to an assigned INTERNAL 1–16 slot
 - SysEx codec isolated in `src/cz101-sysex.js`
 
 No framework and no backend.
+
+## Sound-design help
+
+Hover over section headings or parameter labels to read detailed explanations and sound-design suggestions. Click or tap **?** to keep the bubble open; use its scroll area for longer guides and close it with **×**, Escape, or a click outside. Keyboard users can focus **?** and press Enter or Space, then Tab into the scrollable content. Envelope guides include Rate, Level, Sustain and End; individual R/L/S/E labels also provide hover help without adding stops between the numerical inputs. The help links to the original CZ-101 operation manual and distinguishes the editor's relative timing diagram from hardware envelope timing.
 
 ## Run
 
