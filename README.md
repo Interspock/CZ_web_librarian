@@ -12,6 +12,8 @@ Vanilla HTML/CSS/JavaScript librarian/editor for the Casio CZ-101.
 - Only the line editor(s) selected by Line select are shown; Line 1 + Line 1′ uses the Line 1 editor
 - CZ waveform reference and responsive editor layout
 - Extensive Spanish sound-design help for waves/PD, envelopes, key follow, modulation, detune and vibrato
+- Experimental local PD audio preview for studying DCO/DCW/DCA envelopes on Saw/Square bases
+- Per-patch session Undo/Redo and temporary read-only A/B reference comparison
 - Web MIDI connection with SysEx permission
 - Send a patch to the temporary/edit buffer (`0x60`) by default, or optionally to an assigned INTERNAL 1–16 slot
 - SysEx codec isolated in `src/cz101-sysex.js`
@@ -37,6 +39,26 @@ http://localhost:8080
 ```
 
 Use Chrome/Chromium and grant MIDI/SysEx permission.
+
+## Experimental PD Preview
+
+The **PD Preview** card produces browser audio without MIDI. Choose the visible line to study, a base note, and either its **Wave 1** (currently only 1/2) or a separate **Saw/Square reference**. Reference bases and preview settings do not modify the stored patch. **Play / retrigger** starts the note, **Release** lets its envelopes enter their release stages, and **Stop** ends the sound with a short fade. Patch/line changes and leaving the window stop playback; each note has a one-minute limit.
+
+The DCO/DCW/DCA checkboxes bypass envelopes only for audition: DCO bypass keeps the base pitch, DCW bypass keeps full PD depth, and DCA bypass keeps constant amplitude until release. Patch envelope changes apply after confirming an input or finishing a node drag; retrigger to hear the modified attack. The general Octave setting applies to the base note.
+
+This is an educational approximation, **not a faithful CZ-101 emulator**: waveform phase mappings, pitch-level scaling and envelope rate/timing are not calibrated to the hardware. It is monophonic and does not yet render Wave 2, waves 3–8, two-line layering, Key Follow, Detune, Vibrato or Ring/Noise. Unsupported Wave 1 values are reported explicitly; choose a reference base to study their envelopes. The audio engine runs in an isolated AudioWorklet (`src/preview-worklet.js`) with shared pure DSP (`src/preview-dsp.js`). HTTPS or localhost is required.
+
+Run the DSP regression checks with:
+
+```bash
+node tests/preview-dsp.test.mjs
+```
+
+## Undo/Redo and A/B
+
+The editor keeps up to 100 parameter-edit steps per patch during a session. Continuous typing in a field is grouped; envelope changes and node drags are discrete steps. Undo/Redo restore the saved working patch. New, Duplicate, Delete and Import are not history actions. Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z and Ctrl+Y work outside inputs; inputs retain native text-editing undo. A new edit after Undo clears Redo.
+
+**B → A** captures the working patch as a temporary reference. **A** shows that reference read-only; **B** shows the editable, autosaved working patch. Switching patches preserves their session references and histories; reload/import clears them. Switching A/B retriggers a playing browser preview. **Send to CZ sends the visible version** (the button reads **Send A to CZ** in A), using its displayed destination and the existing INTERNAL confirmation. Switching versions never sends MIDI automatically. JSON exports and Send ALL continue to use the stored working versions B; references and histories never enter the patch schema.
 
 ## Important CZ-101 setup
 

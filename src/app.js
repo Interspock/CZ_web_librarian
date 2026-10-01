@@ -4,10 +4,15 @@ import { EnvelopeEditor } from './envelope-editor.js';
 import { MidiManager } from './midi.js';
 import { sendPatchToCZ, testCZSysex, encodeTone, nibblize } from './cz101-sysex.js';
 import { initHelp, enhanceHelp } from './help.js';
+import { PDPreview } from './preview.js';
+import { PatchHistory } from './patch-history.js';
 
 const $ = s => document.querySelector(s);
 const store = new PatchStore();
 const midi = new MidiManager(renderMidiPorts);
+const histories = new Map();
+const preview = new PDPreview(currentPatch, visibleLines);
+let editGroup = 0;
 let envEditors = [];
 let monitoredInput = null;
 let monitorHandler = null;
@@ -35,16 +40,45 @@ const bindings = [
 
 bindings.forEach(([sel, , set]) => {
   $(sel).addEventListener('input', e => {
+    if (currentHistory().view === 'A') return;
     set(store.selected(), e.target.value);
-    changed();
+    changed(e.target.matches('input') ? `${sel}:${editGroup}` : null);
     if (sel === '#patchName') renderPatchList();
     if (sel === '#lineSelect') renderPatch();
   });
 });
 
+document.addEventListener('focusin', () => { editGroup++; });
+$('#undoPatch').onclick = () => restoreHistory('undo');
+$('#redoPatch').onclick = () => restoreHistory('redo');
+$('#captureA').onclick = () => {
+  currentHistory().capture(store.selected());
+  renderEditTools();
+};
+$('#compareA').onclick = () => compareVersion('A');
+$('#compareB').onclick = () => compareVersion('B');
+
+document.addEventListener('keydown', event => {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+  // Keep native text-field undo; other focused controls use patch history.
+  if (event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+  const key = event.key.toLowerCase();
+  const action = key === 'z' ? (event.shiftKey ? 'redo' : 'undo') : key === 'y' ? 'redo' : null;
+  if (action && currentHistory().view === 'B') {
+    event.preventDefault();
+    restoreHistory(action);
+  }
+});
+
 $('#newPatch').onclick = () => { store.add(createPatch()); renderAll(); };
 $('#duplicatePatch').onclick = () => { store.duplicate(); renderAll(); };
-$('#deletePatch').onclick = () => { if (confirm('Delete selected patch?')) { store.remove(store.selected().id); renderAll(); } };
+$('#deletePatch').onclick = () => {
+  if (confirm('Delete selected patch?')) {
+    const id = store.selected().id;
+    if (store.remove(id)) histories.delete(id);
+    renderAll();
+  }
+};
 $('#search').oninput = renderPatchList;
 $('#connectMidi').onclick = async () => {
   try {
@@ -161,12 +195,13 @@ $('#clearMidiLog').onclick = () => { $('#log').textContent = ''; };
 
 $('#sendPatch').onclick = async () => {
   try {
-    const p = store.selected();
+    const p = currentPatch();
     const destination = internalDestination(p);
     const program = destination === null ? 0x60 : 0x20 + destination - 1;
     const output = selectedOutput();
     if (destination !== null && !confirm(`Write this patch to INTERNAL ${destination}? This will overwrite the patch currently stored in that slot. MEMORY PROTECT must be OFF.`)) return;
     const logical = encodeTone(p);
+    log(`TX version: ${currentHistory().view === 'A' ? 'A (reference)' : 'B (working patch)'}`);
     log(`Encoded ${logical.length} logical bytes / ${nibblize(logical).length} nibbles`);
     log(`TX destination: ${destination === null ? 'edit buffer' : `INTERNAL ${destination}`} (0x${program.toString(16).toUpperCase()})`);
     await sendPatchToCZ({
@@ -269,6 +304,8 @@ $('#jsonFile').onchange = async e => {
   try {
     const data = JSON.parse(await e.target.files[0].text());
     store.importLibrary(data);
+    preview.stop();
+    histories.clear();
     renderAll();
   } catch (err) { alert(`Import failed: ${err.message}`); }
   e.target.value = '';
@@ -277,6 +314,54 @@ $('#jsonFile').onchange = async e => {
 function renderAll() {
   renderPatchList();
   renderPatch();
+}
+
+function currentHistory() {
+  const patch = store.selected();
+  if (!histories.has(patch.id)) histories.set(patch.id, new PatchHistory(patch));
+  return histories.get(patch.id);
+}
+
+function currentPatch() { return currentHistory().current(store.selected()); }
+
+function renderEditTools() {
+  const history = currentHistory();
+  const reference = history.view === 'A';
+  $('#undoPatch').disabled = reference || !history.undoStack.length;
+  $('#redoPatch').disabled = reference || !history.redoStack.length;
+  $('#undoPatch').title = `Undo (${history.undoStack.length} pasos)`;
+  $('#redoPatch').title = `Redo (${history.redoStack.length} pasos)`;
+  $('#captureA').disabled = reference;
+  $('#compareA').disabled = !history.reference;
+  $('#compareA').setAttribute('aria-pressed', String(reference));
+  $('#compareB').setAttribute('aria-pressed', String(!reference));
+  $('#duplicatePatch').disabled = reference;
+  $('#deletePatch').disabled = reference;
+  const text = reference ? 'A · referencia de sólo lectura' : 'B · versión de trabajo';
+  if ($('#editStatus').textContent !== text) $('#editStatus').textContent = text;
+  $('#sendPatch').textContent = reference ? 'Send A to CZ' : 'Send to CZ';
+  $('#sendPatch').title = `Send visible version ${history.view} to its selected destination`;
+  $('#sendPatch').setAttribute('aria-label', $('#sendPatch').title);
+}
+
+function restoreHistory(action) {
+  const patch = currentHistory()[action]();
+  if (!patch) return;
+  const wasPlaying = preview.playing;
+  preview.stop();
+  const index = store.state.patches.findIndex(item => item.id === patch.id);
+  store.state.patches[index] = patch;
+  store.touch();
+  renderAll();
+  if (wasPlaying && !$('#previewPlay').disabled) preview.play();
+}
+
+function compareVersion(version) {
+  if (currentHistory().view === version || !currentHistory().select(version)) return;
+  const wasPlaying = preview.playing;
+  preview.stop();
+  renderPatch();
+  if (wasPlaying && !$('#previewPlay').disabled) preview.play();
 }
 
 function renderPatchList() {
@@ -294,8 +379,9 @@ function renderPatchList() {
 }
 
 function renderPatch() {
-  const p = store.selected();
-  bindings.forEach(([sel,get]) => { $(sel).value = get(p); });
+  const p = currentPatch();
+  const readOnly = currentHistory().view === 'A';
+  bindings.forEach(([sel,get]) => { $(sel).value = get(p); $(sel).disabled = readOnly; });
   const lines = $('#lines');
   lines.innerHTML = '';
   envEditors = [];
@@ -326,6 +412,7 @@ function renderPatch() {
       <div class="envelopes"></div>`;
     if (lineName==='line1') section.querySelector('[data-p="modulation"]').value = line.modulation;
     section.querySelectorAll('[data-p]').forEach(el => el.addEventListener('change', () => {
+      if (currentHistory().view === 'A') return;
       const k = el.dataset.p;
       line[k] = ['waveform1','waveform2','dcaKeyFollow','dcwKeyFollow'].includes(k) ? Number(el.value) : el.value;
       if (k === 'waveform1' || k === 'waveform2') {
@@ -341,11 +428,14 @@ function renderPatch() {
       box.className = 'env-card';
       box.innerHTML = `<h3 data-help="${kind}">${kind.toUpperCase()} envelope <small>drag node: vertical = level · horizontal = rate</small></h3><div class="env-host"></div>`;
       envs.append(box);
-      envEditors.push(new EnvelopeEditor(box.querySelector('.env-host'), line.envelopes[kind], changed));
+      envEditors.push(new EnvelopeEditor(box.querySelector('.env-host'), line.envelopes[kind], changed, readOnly));
     }
     lines.append(section);
   }
+  lines.querySelectorAll('[data-p]').forEach(control => { control.disabled = readOnly; });
   enhanceHelp(lines);
+  preview.refresh();
+  renderEditTools();
   $('#dirtyState').textContent = 'saved locally';
 }
 
@@ -355,10 +445,14 @@ function visibleLines(lineSelect) {
   return ['line1'];
 }
 
-function changed() {
+function changed(group = null) {
+  if (currentHistory().view === 'A') return;
+  currentHistory().record(store.selected(), typeof group === 'string' ? group : null);
   store.touch();
+  preview.refresh();
   $('#dirtyState').textContent = 'saved locally';
   renderPatchList();
+  renderEditTools();
 }
 
 function selectedInput() {

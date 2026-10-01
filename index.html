@@ -44,6 +44,11 @@
     </aside>
 
     <section class="editor">
+      <div class="edit-tools" role="group" aria-label="Historial y comparación del patch">
+        <div class="edit-tool-group"><span class="edit-tool-label" data-help="history">Edición</span><button id="undoPatch" disabled>Undo</button><button id="redoPatch" disabled>Redo</button></div>
+        <div class="edit-tool-group"><span class="edit-tool-label" data-help="comparison">Comparar</span><button id="captureA" title="Capturar la versión B como referencia A">B → A</button><button id="compareA" aria-pressed="false" disabled>A</button><button id="compareB" aria-pressed="true">B</button></div>
+        <span id="editStatus" class="status" role="status" aria-live="polite">B · versión de trabajo</span>
+      </div>
       <section class="parameter-row">
         <div class="patch-head card">
         <div class="field grow">
@@ -105,6 +110,23 @@
             <label>Depth<input id="vibDepth" type="number" min="0" max="99"></label>
           </div>
         </div>
+      </section>
+
+      <section class="card pd-preview" aria-labelledby="previewTitle">
+        <div class="preview-heading">
+          <h2 id="previewTitle" data-help="preview">PD Preview <small>experimental</small></h2>
+          <span id="previewStatus" class="status" role="status" aria-live="polite">Lista · Play para escuchar</span>
+        </div>
+        <div class="preview-controls">
+          <label>Línea<select id="previewLine"></select></label>
+          <label>Base PD<select id="previewSource"><option value="patch">Wave 1 del patch</option><option value="1">Saw · referencia</option><option value="2">Square · referencia</option></select></label>
+          <label>Nota base<select id="previewNote"><option value="36">C2</option><option value="48">C3</option><option value="60" selected>C4</option><option value="72">C5</option></select></label>
+          <fieldset class="preview-envelopes"><legend>Envolventes</legend><label><input type="checkbox" data-preview-envelope="dco" checked> DCO</label><label><input type="checkbox" data-preview-envelope="dcw" checked> DCW</label><label><input type="checkbox" data-preview-envelope="dca" checked> DCA</label></fieldset>
+          <label class="preview-volume">Volumen <output id="previewVolumeValue" for="previewVolume">15%</output><input id="previewVolume" type="range" min="0" max="30" value="15"></label>
+          <div class="preview-actions"><button id="previewPlay">Play / retrigger</button><button id="previewRelease" disabled>Release</button><button id="previewStop" disabled>Stop</button></div>
+        </div>
+        <p id="previewScope" class="preview-note"></p>
+        <p class="preview-note">Audio local · formas PD, escala de pitch y tiempos de envolvente aproximados. No es una emulación fiel del CZ. Los cambios se oyen al confirmar un valor o soltar un nodo.</p>
       </section>
 
       <div id="lines" class="lines"></div>

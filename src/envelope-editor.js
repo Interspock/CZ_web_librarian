@@ -3,10 +3,11 @@ import { clamp, MAX_STEPS } from './patch-model.js';
 const NS = 'http://www.w3.org/2000/svg';
 
 export class EnvelopeEditor {
-  constructor(container, envelope, onChange) {
+  constructor(container, envelope, onChange, readOnly = false) {
     this.container = container;
     this.envelope = envelope;
     this.onChange = onChange;
+    this.readOnly = readOnly;
     this.width = 620;
     this.height = 220;
     this.pad = { l: 34, r: 16, t: 18, b: 28 };
@@ -68,7 +69,8 @@ export class EnvelopeEditor {
     g.dataset.index = i;
     const c = document.createElementNS(NS, 'circle');
     c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', 7);
-    c.addEventListener('pointerdown', e => this.pointerDown(e, i));
+    if (!this.readOnly) c.addEventListener('pointerdown', e => this.pointerDown(e, i));
+    else c.style.cursor = 'default';
     g.append(c);
 
     const label = document.createElementNS(NS, 'text');
@@ -92,6 +94,7 @@ export class EnvelopeEditor {
         <label data-help="level" data-help-hover-only>L <input aria-label="Level, etapa ${i + 1}" data-k="level" type="number" min="0" max="99" value="${s.level}"></label>
         <label class="check" data-help="sustain" data-help-hover-only><input aria-label="Sustain, etapa ${i + 1}" data-k="sustain" type="radio" name="sustain-${this.envelope.kind}-${this.uid}" ${s.sustain ? 'checked' : ''} ${i >= this.envelope.endStep ? 'disabled' : ''}> S</label>
         <label class="check" data-help="end" data-help-hover-only><input aria-label="End, etapa ${i + 1}" data-k="end" type="radio" name="end-${this.envelope.kind}-${this.uid}" ${i + 1 === this.envelope.endStep ? 'checked' : ''}> E</label>`;
+      if (this.readOnly) row.querySelectorAll('input').forEach(input => { input.disabled = true; });
       row.querySelector('[data-k="sustain"]').addEventListener('click', event => {
         const removeSustain = s.sustain;
         event.preventDefault();
