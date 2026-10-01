@@ -92,18 +92,22 @@ export class EnvelopeEditor {
         <label>L <input data-k="level" type="number" min="0" max="99" value="${s.level}"></label>
         <label class="check"><input data-k="sustain" type="radio" name="sustain-${this.envelope.kind}-${this.uid}" ${s.sustain ? 'checked' : ''} ${i >= this.envelope.endStep ? 'disabled' : ''}> S</label>
         <label class="check"><input data-k="end" type="radio" name="end-${this.envelope.kind}-${this.uid}" ${i + 1 === this.envelope.endStep ? 'checked' : ''}> E</label>`;
+      row.querySelector('[data-k="sustain"]').addEventListener('click', event => {
+        const removeSustain = s.sustain;
+        event.preventDefault();
+        this.envelope.steps.forEach(x => x.sustain = false);
+        if (!removeSustain && i < this.envelope.endStep) s.sustain = true;
+        this.changed();
+      });
       row.querySelectorAll('input').forEach(input => input.addEventListener('change', () => {
         const key = input.dataset.k;
+        if (key === 'sustain') return;
         if (key === 'rate' || key === 'level') {
           s[key] = clamp(input.value, 0, 99);
           input.value = s[key];
           this.onChange?.(this.envelope);
           this.refreshGraph();
           return;
-        }
-        if (key === 'sustain') {
-          this.envelope.steps.forEach(x => x.sustain = false);
-          if (i < this.envelope.endStep) s.sustain = true;
         }
         if (key === 'end') {
           this.envelope.endStep = i + 1;

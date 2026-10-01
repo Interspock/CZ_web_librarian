@@ -37,6 +37,8 @@
       <div class="toolbar bottom">
         <button id="importJson">Import JSON</button>
         <button id="exportJson">Export JSON</button>
+        <button id="sendAllPatches">Send ALL patches</button>
+        <div id="sendAllStatus" class="batch-status" role="status" aria-live="polite"></div>
         <input id="jsonFile" type="file" accept="application/json,.json" hidden>
       </div>
     </aside>
@@ -111,10 +113,10 @@
         <summary>MIDI debug / protocol log</summary>
         <div class="debug-body">
         <div class="debug-head">
-          <div class="debug-help">1) Tocá el CZ y buscá RX NOTE. 2) Send C4 prueba Chrome → CZ. Set A440 sends CC 6 = 64 to center the CZ-101 Master Tune. 3) SysEx smoke test manda un mensaje Casio completo y verifica que Web MIDI lo acepte. El handshake “streaming” original del CZ no se puede emitir como fragmentos desde Web MIDI.</div>
+          <div class="debug-help">1) Tocá el CZ y buscá RX NOTE. 2) Send C4 prueba Chrome → CZ. Tunear CZ sets Master Tune to A440 and Key Transpose to C. 3) SysEx smoke test manda un mensaje Casio completo y verifica que Web MIDI lo acepte. El handshake “streaming” original del CZ no se puede emitir como fragmentos desde Web MIDI.</div>
           <div class="debug-actions">
             <button id="testNote">Send C4</button>
-            <button id="setA440">Set A440</button>
+            <button id="tuneCZ">Tunear CZ</button>
             <button id="testSysex">SysEx smoke test</button>
             <button id="loadRawSyx">Load raw .syx</button>
             <button id="sendRawSyx" disabled>Send raw → edit buffer</button>

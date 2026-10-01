@@ -222,6 +222,22 @@ h1 {
   margin-top: auto;
 }
 
+#sendAllPatches,
+.batch-status {
+  flex: 1 1 100%;
+}
+
+.batch-status {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.batch-status:empty {
+  display: none;
+}
+
 #search {
   width: 100%;
   background: #0b131c;
@@ -252,13 +268,9 @@ h1 {
   overflow: hidden;
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.patch-item small {
-  color: var(--muted);
-  font-size: 10px;
 }
 
 .patch-item.selected {

@@ -11,6 +11,7 @@ let envEditors = [];
 let monitoredInput = null;
 let monitorHandler = null;
 let rawSyx = null;
+let batchSending = false;
 
 const bindings = [
   ['#patchName', p=>p.name, (p,v)=>p.name=v],
@@ -72,15 +73,22 @@ $('#testNote').onclick = () => {
   }
 };
 
-$('#setA440').onclick = () => {
+$('#tuneCZ').onclick = async () => {
   try {
     const out = selectedOutput();
     const ch = selectedChannel0();
-    const message = [0xB0 | ch, 0x06, 0x40];
-    out.send(message);
-    log(`TX MASTER TUNE A440: ${hex(message)}  (CC 6 = 64, CH ${ch + 1})`);
+    const masterTune = [0xB0 | ch, 0x06, 0x40];
+    const keyTranspose = [0xF0, 0x44, 0x00, 0x00, 0x70 | ch, 0x41, 0x00, 0xF7];
+    out.send(masterTune);
+    log(`TX MASTER TUNE A440: ${hex(masterTune)}  (CC 6 = 64, CH ${ch + 1})`);
+    await new Promise(resolve => setTimeout(resolve, 40));
+    out.send(keyTranspose);
+    log(`TX KEY TRANSPOSE C: ${hex(keyTranspose)}  (CH ${ch + 1})`);
+    log('CZ tuning initialized: A440 + Key C');
+    $('#midiStatus').textContent = 'CZ tuning sent';
   } catch (e) {
-    log(`MASTER TUNE ERROR: ${e.message}`);
+    log(`TUNE CZ ERROR: ${e.message}`);
+    $('#midiStatus').textContent = 'CZ tune failed';
   }
 };
 
@@ -174,6 +182,79 @@ $('#sendPatch').onclick = async () => {
   }
 };
 
+$('#sendAllPatches').onclick = async () => {
+  if (batchSending) return;
+  const status = $('#sendAllStatus');
+  const queue = store.state.patches
+    .map(patch => ({ patch, destination: internalDestination(patch) }))
+    .filter(item => item.destination !== null)
+    .sort((a, b) => a.destination - b.destination);
+
+  if (!queue.length) {
+    status.textContent = 'No patches assigned to INTERNAL slots.';
+    return;
+  }
+
+  const duplicates = [...new Set(queue.filter((item, i) => i > 0 && item.destination === queue[i - 1].destination).map(item => item.destination))];
+  if (duplicates.length) {
+    status.textContent = `Duplicate INTERNAL destination(s): ${duplicates.join(', ')}. Resolve them before sending.`;
+    return;
+  }
+
+  let output;
+  let snapshot;
+  try {
+    output = selectedOutput();
+    snapshot = queue.map(({ patch, destination }) => ({ patch: structuredClone(patch), destination }));
+  } catch (e) {
+    status.textContent = `Send ALL error: ${e.message}`;
+    log(`SEND ALL ERROR: ${e.message}`);
+    $('#midiStatus').textContent = 'Batch send failed';
+    return;
+  }
+
+  const channel = selectedChannel0() + 1;
+  const summary = snapshot.map(({ patch, destination }) => `INTERNAL ${destination}: ${patch.name}`).join('\n');
+  if (!confirm(`Write ${snapshot.length} patches to these INTERNAL slots? Existing patches in those slots will be overwritten. MEMORY PROTECT must be OFF.\n\n${summary}`)) return;
+
+  const controls = ['#sendAllPatches', '#sendPatch', '#testNote', '#tuneCZ', '#testSysex', '#loadRawSyx', '#sendRawSyx', '#connectMidi', '#midiOutput', '#midiChannel'];
+  const disabledBefore = controls.map(selector => $(selector).disabled);
+  controls.forEach(selector => { $(selector).disabled = true; });
+  batchSending = true;
+  let sent = 0;
+  let current = null;
+
+  try {
+    for (const item of snapshot) {
+      if (sent) await new Promise(resolve => setTimeout(resolve, 1000));
+      current = item;
+      const progress = `${sent + 1}/${snapshot.length}: INTERNAL ${item.destination} — ${item.patch.name}`;
+      status.textContent = `Sending ${progress}`;
+      $('#midiStatus').textContent = `Sending ${sent + 1}/${snapshot.length}`;
+      log(`TX destination: INTERNAL ${item.destination} (0x${(0x20 + item.destination - 1).toString(16).toUpperCase()}) — ${item.patch.name}`);
+      await sendPatchToCZ({
+        midiOutput: output,
+        channel,
+        patch: item.patch,
+        program: 0x20 + item.destination - 1,
+        log
+      });
+      sent++;
+      status.textContent = `Sent ${sent}/${snapshot.length}: INTERNAL ${item.destination} — ${item.patch.name}${sent < snapshot.length ? ' · next in 1 s' : ''}`;
+    }
+    status.textContent = `${sent}/${snapshot.length} sent to Web MIDI; CZ reception not confirmed.`;
+    $('#midiStatus').textContent = `Batch sent: ${sent}/${snapshot.length}`;
+  } catch (e) {
+    const slot = current ? ` at INTERNAL ${current.destination} — ${current.patch.name}` : '';
+    status.textContent = `Stopped after ${sent}/${snapshot.length}${slot}: ${e.message}`;
+    log(`SEND ALL ERROR${slot}: ${e.message}`);
+    $('#midiStatus').textContent = 'Batch send failed';
+  } finally {
+    controls.forEach((selector, i) => { $(selector).disabled = disabledBefore[i]; });
+    batchSending = false;
+  }
+};
+
 $('#exportJson').onclick = () => {
   const blob = new Blob([store.exportLibrary()], {type:'application/json'});
   const a = document.createElement('a');
@@ -204,7 +285,8 @@ function renderPatchList() {
   store.state.patches.filter(p => p.name.toLowerCase().includes(q)).forEach(p => {
     const b = document.createElement('button');
     b.className = `patch-item ${p.id === store.state.selectedId ? 'selected' : ''}`;
-    b.innerHTML = `<strong>${escapeHtml(p.name)}</strong><small>${new Date(p.meta.updatedAt).toLocaleString()}</small>`;
+    b.title = `Last modified: ${new Date(p.meta.updatedAt).toLocaleString()}`;
+    b.innerHTML = `<strong>${escapeHtml(p.name)}</strong>`;
     b.onclick = () => { store.select(p.id); renderAll(); };
     list.append(b);
   });
