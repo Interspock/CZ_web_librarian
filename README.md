@@ -14,6 +14,7 @@ Vanilla HTML/CSS/JavaScript librarian/editor for the Casio CZ-101.
 - Extensive Spanish sound-design help for waves/PD, envelopes, key follow, modulation, detune and vibrato
 - Experimental local PD audio preview for studying DCO/DCW/DCA envelopes on Saw/Square bases
 - Per-patch session Undo/Redo and temporary read-only A/B reference comparison
+- Automatic MIDI audition of parameter edits with a one-second C4 note
 - Web MIDI connection with SysEx permission
 - Send a patch to the temporary/edit buffer (`0x60`) by default, or optionally to an assigned INTERNAL 1–16 slot
 - SysEx codec isolated in `src/cz101-sysex.js`
@@ -67,6 +68,22 @@ The editor keeps up to 100 parameter-edit steps per patch during a session. Cont
 - MIDI channel in the app must match the CZ receive channel.
 - Enable the CZ MIDI/SysEx programming mode as required by the instrument.
 - **Destination defaults to Edit buffer (`0x60`)**, which does not intentionally overwrite an internal memory slot. Selecting INTERNAL 1–16 writes directly to that slot after an explicit confirmation. Set the CZ's MEMORY PROTECT to OFF for an INTERNAL write.
+
+## Auto MIDI audition
+
+The **Auto** switch is next to **Send to CZ** in the header and starts off on each page load. Connect MIDI, select an output and the CZ receive channel, then enable Auto to hear edits on the hardware without playing its keyboard. Enabling the switch alone does not send a patch.
+
+Every parameter edit, including Destination changes, sends the working patch to the **temporary/edit buffer (`0x60`)**, followed by **C4 (MIDI note 60, velocity 100)** and Note Off after **one second**. Name changes do not trigger audition. Auto always uses the temporary buffer, even when the patch has an INTERNAL destination assigned. Use **Send to CZ** and confirm the write to store the sound in that INTERNAL slot.
+
+Rapid edits are grouped with a 150 ms delay after the last edit; another 150 ms separates the patch frame from Note On. Envelope node drags trigger when released. Undo/Redo also auditions parameter changes, but not name-only changes. Selecting another patch or switching A/B cancels playback without sending a new patch. No output selected means no automatic send; Auto is suspended during Send ALL.
+
+A new edit releases the previous Auto note before scheduling another. Turning Auto off, changing output/channel, MIDI port changes, switching the visible patch, or leaving the page cancels pending playback and releases any active Auto note on its original output/channel. Like manual sending, Auto does not confirm reception by the CZ.
+
+The timer wrappers preserve the browser's global context, fixing the `Illegal invocation` error that initially occurred during page loading. Regression checks cover startup, message order, the one-second note duration, rapid edits, cancellation and missing MIDI output:
+
+```bash
+node --experimental-default-type=module --test tests/*.test.mjs
+```
 
 ## Patch destinations
 

@@ -20,6 +20,7 @@
       <select id="midiOutput" aria-label="MIDI output"></select>
       <label>CH <input id="midiChannel" type="number" min="1" max="16" value="1"></label>
       <button id="sendPatch" class="primary header-send" title="Send patch to selected destination" aria-label="Send patch to selected destination">Send to CZ</button>
+      <label class="auto-switch" title="Envía los cambios por MIDI al buffer temporal y toca C4 durante 1 segundo (excepto el nombre)"><input id="autoAudition" type="checkbox" role="switch"> Auto</label>
       <span id="dirtyState" class="status" hidden>saved locally</span>
       <span id="midiStatus" class="status">MIDI disconnected</span>
     </div>

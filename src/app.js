@@ -6,6 +6,7 @@ import { sendPatchToCZ, testCZSysex, encodeTone, nibblize } from './cz101-sysex.
 import { initHelp, enhanceHelp } from './help.js';
 import { PDPreview } from './preview.js';
 import { PatchHistory } from './patch-history.js';
+import { AutoAudition } from './auto-audition.js';
 
 const $ = s => document.querySelector(s);
 const store = new PatchStore();
@@ -18,6 +19,19 @@ let monitoredInput = null;
 let monitorHandler = null;
 let rawSyx = null;
 let batchSending = false;
+const autoAudition = new AutoAudition({
+  context: () => {
+    const output = midi.output($('#midiOutput').value);
+    if (!output || output.state === 'disconnected' || batchSending) return null;
+    return { output, channel: selectedChannel0(), patch: currentPatch() };
+  },
+  log
+});
+$('#autoAudition').onchange = e => autoAudition.setEnabled(e.target.checked);
+['#midiOutput', '#midiChannel'].forEach(selector => {
+  $(selector).addEventListener('change', () => autoAudition.stop());
+});
+window.addEventListener('pagehide', () => autoAudition.stop());
 
 const bindings = [
   ['#patchName', p=>p.name, (p,v)=>p.name=v],
@@ -42,9 +56,9 @@ bindings.forEach(([sel, , set]) => {
   $(sel).addEventListener('input', e => {
     if (currentHistory().view === 'A') return;
     set(store.selected(), e.target.value);
-    changed(e.target.matches('input') ? `${sel}:${editGroup}` : null);
+    changed(e.target.matches('input') ? `${sel}:${editGroup}` : null, sel !== '#patchName');
     if (sel === '#patchName') renderPatchList();
-    if (sel === '#lineSelect') renderPatch();
+    if (sel === '#lineSelect') { renderPatch(); autoAudition.changed(); }
   });
 });
 
@@ -256,6 +270,7 @@ $('#sendAllPatches').onclick = async () => {
   const controls = ['#sendAllPatches', '#sendPatch', '#testNote', '#tuneCZ', '#testSysex', '#loadRawSyx', '#sendRawSyx', '#connectMidi', '#midiOutput', '#midiChannel'];
   const disabledBefore = controls.map(selector => $(selector).disabled);
   controls.forEach(selector => { $(selector).disabled = true; });
+  autoAudition.stop();
   batchSending = true;
   let sent = 0;
   let current = null;
@@ -345,6 +360,7 @@ function renderEditTools() {
 }
 
 function restoreHistory(action) {
+  const before = auditionParameters(store.selected());
   const patch = currentHistory()[action]();
   if (!patch) return;
   const wasPlaying = preview.playing;
@@ -354,6 +370,11 @@ function restoreHistory(action) {
   store.touch();
   renderAll();
   if (wasPlaying && !$('#previewPlay').disabled) preview.play();
+  if (before !== auditionParameters(patch)) autoAudition.changed();
+}
+
+function auditionParameters(patch) {
+  return JSON.stringify([patch.common, patch.line1, patch.line2, internalDestination(patch)]);
 }
 
 function compareVersion(version) {
@@ -379,6 +400,7 @@ function renderPatchList() {
 }
 
 function renderPatch() {
+  autoAudition.stop();
   const p = currentPatch();
   const readOnly = currentHistory().view === 'A';
   bindings.forEach(([sel,get]) => { $(sel).value = get(p); $(sel).disabled = readOnly; });
@@ -445,7 +467,7 @@ function visibleLines(lineSelect) {
   return ['line1'];
 }
 
-function changed(group = null) {
+function changed(group = null, audition = true) {
   if (currentHistory().view === 'A') return;
   currentHistory().record(store.selected(), typeof group === 'string' ? group : null);
   store.touch();
@@ -453,6 +475,7 @@ function changed(group = null) {
   $('#dirtyState').textContent = 'saved locally';
   renderPatchList();
   renderEditTools();
+  if (audition) autoAudition.changed();
 }
 
 function selectedInput() {
@@ -525,6 +548,7 @@ async function sha256(bytes) {
 }
 
 function renderMidiPorts(ports) {
+  autoAudition.stop();
   fill($('#midiInput'), ports.inputs, 'MIDI input');
   fill($('#midiOutput'), ports.outputs, 'MIDI output');
 }

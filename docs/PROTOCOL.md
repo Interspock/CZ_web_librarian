@@ -4,7 +4,7 @@ This file exists so future work does not bury protocol assumptions inside UI cod
 
 ## Transaction used by “Send to CZ current sound”
 
-The app uses the receive-request flow aimed at the temporary/current-sound program number `0x60`:
+The original documented receive-request flow for the temporary/current-sound program number `0x60` is shown below. The browser app sends a complete frame instead, as explained under “Web MIDI note”:
 
 ```text
 Computer -> CZ: F0 44 00 00 7n 20 60
@@ -43,3 +43,10 @@ For browser transmission this MVP therefore uses the complete `.syx` representat
 `F0 44 00 00 7n 20 pp <256 nibble bytes> F7`
 
 `pp = 60` targets the temporary/current sound. This is suitable for SEND. Receiving a patch from the CZ may require a different strategy because the documented read transaction is interactive/streamed.
+
+
+## Auto MIDI audition
+
+Auto always sends the complete tone frame with `pp = 0x60`, regardless of the patch's assigned INTERNAL destination. After 150 ms without a new edit it sends the frame, waits another 150 ms for tone reception, and sends `90 | n, 3C, 64` (C4, velocity 100). One second after Note On it sends `80 | n, 3C, 00` (Note Off). Here `n` is the selected zero-based MIDI channel; values shown are hexadecimal.
+
+Pending sends are canceled on a new edit or context change. An active Auto note is released on its original output/channel before retriggering or stopping. Missing MIDI output and active batch sending skip the audition. The delay is fixed; Auto does not wait for an ACK or otherwise verify hardware reception. Scheduling is isolated in `src/auto-audition.js`; tone encoding remains in `src/cz101-sysex.js`.
